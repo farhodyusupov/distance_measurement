@@ -10,7 +10,7 @@ import SwiftUI
 import Combine
 import MetalKit
 import Metal
-
+import simd
 struct MetalTextureColorZapView: UIViewRepresentable, MetalRepresentable {
     var rotationAngle: Double
     @Binding var maxDepth: Float
@@ -55,14 +55,15 @@ final class MTKColorZapCoordinator: MTKCoordinator<MetalTextureColorZapView> {
         guard let commandBuffer = metalCommandQueue.makeCommandBuffer() else { return }
         guard let passDescriptor = view.currentRenderPassDescriptor else { return }
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: passDescriptor) else { return }
+        
         // Vertex and Texture coordinates data (x,y,u,v) * 4 ordered for triangle strip.
         let vertexData: [Float] = [-1, -1, 1, 1,
-                                    1, -1, 1, 0,
-                                   -1,  1, 0, 1,
-                                    1,  1, 0, 0]
+                                   1, -1, 1, 0,
+                                  -1,  1, 0, 1,
+                                   1,  1, 0, 0]
         let f = Float(abs(sin(Float(iTime) * speedFactor)))
         var minDepth: Float = self.parent.minDepth
-        var maxDepth: Float = (self.parent.maxDepth - minDepth ) * f + minDepth
+        var maxDepth: Float = (self.parent.maxDepth - minDepth) * f + minDepth
         encoder.setVertexBytes(vertexData, length: vertexData.count * MemoryLayout<Float>.stride, index: 0)
         encoder.setFragmentBytes(&minDepth, length: MemoryLayout<Float>.stride, index: 0)
         encoder.setFragmentBytes(&maxDepth, length: MemoryLayout<Float>.stride, index: 1)
@@ -73,9 +74,9 @@ final class MTKColorZapCoordinator: MTKCoordinator<MetalTextureColorZapView> {
         encoder.setDepthStencilState(depthState)
         encoder.setRenderPipelineState(pipelineState)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-        encoder.endEncoding()
-        commandBuffer.present(view.currentDrawable!)
-        commandBuffer.commit()
-        iTime += 1
+        
+        // Read Depth Data
+        
     }
+
 }
