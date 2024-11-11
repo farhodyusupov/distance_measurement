@@ -18,7 +18,8 @@ struct ContentView: View {
     @State private var distanceToPoint1: Float? = nil
     @State private var distanceToPoint2: Float? = nil
     @State private var distanceBetweenPoints: Float? = nil
-
+    @State private var sceneView = ARSCNView()
+    var spheres: [SCNNode] = []
     var body: some View {
         VStack {
             VStack {
@@ -82,7 +83,8 @@ struct ContentView: View {
                         }
                 )
 
-                // Overlay circles at tap locations
+                ARView(distanceBetweenPoints: $distanceBetweenPoints)
+                                .edgesIgnoringSafeArea(.all)
                 if let location1 = tapLocation1 {
                     Circle()
                         .fill(Color.red)
@@ -99,157 +101,135 @@ struct ContentView: View {
         }
     }
 }
-//struct ContentView: View {
-//    
-//    @StateObject private var manager = CameraManager()
-//    
-//    @State private var maxDepth = Float(5.0)
-//    @State private var minDepth = Float(0.0)
-//    @State private var firstPoint: CGPoint? = nil
-//    @State private var secondPoint: CGPoint? = nil
-//    @State private var distance: Float? = nil
-//    @State private var worldPoints: [simd_float3] = []
-//    @State private var screenPoints: [CGPoint] = []
-//    
-//    let maxRangeDepth = Float(15)
-//    let minRangeDepth = Float(0)
-//    
-//    var body: some View {
-//        VStack {
-//            HStack {
-//                Button {
-//                    manager.processingCapturedResult ? manager.resumeStream() : manager.startPhotoCapture()
-//                } label: {
-//                    Image(systemName: manager.processingCapturedResult ? "play.circle" : "camera.circle")
-//                        .font(.largeTitle)
-//                }
-//                
-//                Text("Depth Filtering")
-//                Toggle("Depth Filtering", isOn: $manager.isFilteringDepth).labelsHidden()
-//                Spacer()
-//            }
-//            SliderDepthBoundaryView(val: $maxDepth, label: "Max Depth", minVal: minRangeDepth, maxVal: maxRangeDepth)
-//            SliderDepthBoundaryView(val: $minDepth, label: "Min Depth", minVal: minRangeDepth, maxVal: maxRangeDepth)
-//            if #available(iOS 17.0, *) {
-//                if #available(iOS 18.0, *) {
-//                    ZStack {
-//                        MetalTextureColorZapView(
-//                            rotationAngle: rotationAngle,
-//                            maxDepth: $maxDepth,
-//                            minDepth: $minDepth,
-//                            capturedData: manager.capturedData
-//                        )
-//                        
-//                        // Overlay red circles on tapped points
-//                        ForEach(screenPoints, id: \.self) { point in
-//                            Circle()
-//                                .fill(Color.red)
-//                                .frame(width: 20, height: 20)
-//                                .position(point)
-//                        }
-//                    }
-//                    .onTapGesture { location in
-//                        if firstPoint == nil {
-//                            firstPoint = location
-//                        } else {
-//                            secondPoint = location
-//                            calculateDistance()
-//                            
-//                            // Convert and store 3D world points
-//                            if let point1 = firstPoint {
-//                                let texCoord1 = convertToTextureCoordinates(point: point1, textureWidth: manager.capturedData.depth!.width, textureHeight: manager.capturedData.depth!.height)
-//                                let depth1 = manager.getDepthValue(at: texCoord1)
-//                                let worldPoint1 = convertScreenToWorld(point: texCoord1, depth: depth1)
-//                                worldPoints.append(worldPoint1)
-//                                screenPoints.append(projectWorldToScreen(worldPoint1))
-//                            }
-//                            
-//                            if let point2 = secondPoint {
-//                                let texCoord2 = convertToTextureCoordinates(point: point2, textureWidth: manager.capturedData.depth!.width, textureHeight: manager.capturedData.depth!.height)
-//                                let depth2 = manager.getDepthValue(at: texCoord2)
-//                                let worldPoint2 = convertScreenToWorld(point: texCoord2, depth: depth2)
-//                                worldPoints.append(worldPoint2)
-//                                screenPoints.append(projectWorldToScreen(worldPoint2))
-//                            }
-//                            
-//                            // Clear the points for next set of taps
-//                            firstPoint = nil
-//                            secondPoint = nil
-//                        }
-//                    }
-//                } else {
-//                    // Fallback on earlier versions
-//                }
-//            } else {
-//                // Fallback on earlier versions
-//            }
-//            
-//            if let distance = distance {
-//                Text(String(format: "Distance: %.2f meters", distance))
-//                    .font(.headline)
-//                    .padding()
-//            }
-//        }
-//    }
-//    func calculateDistance() {
-//            guard let point1 = firstPoint, let point2 = secondPoint else {
-//                return
-//            }
-//
-//            // Convert points to texture coordinates
-//            let texCoord1 = convertToTextureCoordinates(point: point1, textureWidth: manager.capturedData.depth!.width, textureHeight: manager.capturedData.depth!.height)
-//            let texCoord2 = convertToTextureCoordinates(point: point2, textureWidth: manager.capturedData.depth!.width, textureHeight: manager.capturedData.depth!.height)
-//
-//            // Get depth values at these points
-//            let depth1 = manager.getDepthValue(at: texCoord1)
-//            let depth2 = manager.getDepthValue(at: texCoord2)
-//
-//            // Convert 2D points + depth into 3D coordinates
-//            let worldPoint1 = convertScreenToWorld(point: texCoord1, depth: depth1)
-//            let worldPoint2 = convertScreenToWorld(point: texCoord2, depth: depth2)
-//
-//            // Calculate the Euclidean distance between the two 3D points
-//            let calculatedDistance = simd_distance(worldPoint1, worldPoint2)
-//
-//            // Update the distance state to show in the UI
-//            distance = calculatedDistance
-//            print("calculatedDistance:: \(calculatedDistance)")
-//            // Clear points for next selection
-//            firstPoint = nil
-//            secondPoint = nil
-//        }
-//
-//    func convertToTextureCoordinates(point: CGPoint, textureWidth: Int, textureHeight: Int) -> CGPoint {
-//        let convertedX = max(0, min(textureWidth - 1, Int(point.x * CGFloat(textureWidth) / UIScreen.main.bounds.width)))
-//        let convertedY = max(0, min(textureHeight - 1, Int(point.y * CGFloat(textureHeight) / UIScreen.main.bounds.height)))
-//        return CGPoint(x: convertedX, y: convertedY)
-//    }
-//
-//    func convertScreenToWorld(point: CGPoint, depth: Float) -> simd_float3 {
-//        let fx: Float = 500.0  // Focal length in the x direction (in pixels)
-//        let fy: Float = 500.0  // Focal length in the y direction (in pixels)
-//        let cx: Float = 320.0  // Principal point offset in x (center of the image)
-//        let cy: Float = 240.0  // Principal point offset in y (center of the image)
-//
-//        let x = (Float(point.x) - cx) * depth / fx
-//        let y = (Float(point.y) - cy) * depth / fy
-//        let z = depth
-//
-//        return simd_float3(x, y, z)
-//    }
-//
-//    func projectWorldToScreen(_ worldPoint: simd_float3) -> CGPoint {
-//        let fx: Float = 500.0
-//        let fy: Float = 500.0
-//        let cx: Float = 320.0
-//        let cy: Float = 240.0
-//
-//        let screenX = (worldPoint.x * fx) / worldPoint.z + cx
-//        let screenY = (worldPoint.y * fy) / worldPoint.z + cy
-//
-//        return CGPoint(x: CGFloat(screenX), y: CGFloat(screenY))
-//    }
-//}
+
+
+struct ARView: UIViewRepresentable {
+    @Binding var distanceBetweenPoints: Float?
+    var sceneView = ARSCNView()
+    var spheres: [SCNNode] = []
+    var tappedPoints: [SCNVector3] = []
+     var lineNode: SCNNode?
+     
+    func makeUIView(context: Context) -> ARSCNView {
+        sceneView.delegate = context.coordinator
+        sceneView.scene = SCNScene()
+        
+        let configuration = ARWorldTrackingConfiguration()
+        configuration.planeDetection = [.horizontal, .vertical]
+        sceneView.session.run(configuration)
+        
+        let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
+        sceneView.addGestureRecognizer(tapGesture)
+        
+        return sceneView
+    }
+
+    func updateUIView(_ uiView: ARSCNView, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, ARSCNViewDelegate {
+        var parent: ARView
+        
+        init(_ parent: ARView) {
+            self.parent = parent
+        }
+        
+        @objc func handleTap(_ sender: UITapGestureRecognizer) {
+                   let location = sender.location(in: parent.sceneView)
+                   let hitTestResults = parent.sceneView.hitTest(location, types: [.featurePoint])
+                   
+                   guard let result = hitTestResults.last else { return }
+                   
+                   let transform = result.worldTransform
+                   let position = SCNVector3(
+                       transform.columns.3.x,
+                       transform.columns.3.y,
+                       transform.columns.3.z
+                   )
+                   
+                   // Reset if this is the third point
+                   if parent.tappedPoints.count == 2 {
+                       parent.clearPoints()
+                   }
+                   
+                   // Add the new point and sphere
+                   parent.addPoint(position)
+                   
+                   // Calculate distance if there are exactly two points
+                   if parent.tappedPoints.count == 2 {
+                       let distance = parent.tappedPoints[0].distance(to: parent.tappedPoints[1])
+                       parent.distanceBetweenPoints = distance
+                       parent.drawLineBetweenPoints()
+                   }
+               }
+        
+    }
+    private mutating func clearPoints() {
+        for sphere in spheres {
+            sphere.removeFromParentNode()
+        }
+        spheres.removeAll()
+        tappedPoints.removeAll()
+        distanceBetweenPoints = nil
+    }
+    
+    private mutating func addPoint(_ position: SCNVector3) {
+           tappedPoints.append(position)
+           
+           let sphere = createSphere(at: position)
+           sceneView.scene.rootNode.addChildNode(sphere)
+           spheres.append(sphere)
+       }
+    private func createSphere(at position: SCNVector3) -> SCNNode {
+        let sphere = SCNSphere(radius: 0.02)
+        let node = SCNNode(geometry: sphere)
+        node.position = position
+        
+        let material = SCNMaterial()
+        material.diffuse.contents = UIColor.red
+        sphere.firstMaterial = material
+        
+        return node
+    }
+    private mutating func drawLineBetweenPoints() {
+            guard tappedPoints.count == 2 else { return }
+            
+            let start = tappedPoints[0]
+            let end = tappedPoints[1]
+            
+            // Create a cylinder to represent the line
+            let cylinder = SCNCylinder(radius: 0.002, height: CGFloat(start.distance(to: end)))
+            cylinder.firstMaterial?.diffuse.contents = UIColor.yellow
+            
+            let lineNode = SCNNode(geometry: cylinder)
+            
+            // Position the line node at the midpoint between start and end
+            lineNode.position = SCNVector3(
+                (start.x + end.x) / 2,
+                (start.y + end.y) / 2,
+                (start.z + end.z) / 2
+            )
+            
+            // Rotate the line to align with the two points
+            lineNode.look(at: end, up: sceneView.scene.rootNode.worldUp, localFront: lineNode.worldUp)
+            
+            // Add the line node to the scene and store a reference to it
+            sceneView.scene.rootNode.addChildNode(lineNode)
+            self.lineNode = lineNode
+        }
+}
+
+extension SCNVector3 {
+    func distance(to vector: SCNVector3) -> Float {
+        let dx = self.x - vector.x
+        let dy = self.y - vector.y
+        let dz = self.z - vector.z
+        return sqrt(dx * dx + dy * dy + dz * dz)
+    }
+}
 
 struct SliderDepthBoundaryView: View {
     @Binding var val: Float
