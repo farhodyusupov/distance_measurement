@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 55;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -62,6 +62,10 @@
 		E8F1BD572CD9F59800CD3A44 /* ARMeasureViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARMeasureViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		E8B5A00F2CE1C2EA002EC18D /* screnshots */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = screnshots; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		AE921D23270D7B02000E95C6 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -96,6 +100,7 @@
 		AE921D28270D7B02000E95C6 /* LiDARDepth */ = {
 			isa = PBXGroup;
 			children = (
+				E8B5A00F2CE1C2EA002EC18D /* screnshots */,
 				E8F1BD572CD9F59800CD3A44 /* ARMeasureViewController.swift */,
 				E8F1BD552CD9F22D00CD3A44 /* ARMeasureView.swift */,
 				AE9AD78C270ECD01001218B2 /* CameraController.swift */,
@@ -202,6 +207,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E8B5A00F2CE1C2EA002EC18D /* screnshots */,
 			);
 			name = LiDARDepth;
 			productName = DepthAPISample;
@@ -413,7 +421,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"LiDARDepth/Preview Content\"";
-				DEVELOPMENT_TEAM = 5272YF6DP5;
+				DEVELOPMENT_TEAM = P388XG72DG;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LiDARDepth/Info.plist;
@@ -458,7 +466,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"LiDARDepth/Preview Content\"";
-				DEVELOPMENT_TEAM = 5272YF6DP5;
+				DEVELOPMENT_TEAM = P388XG72DG;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LiDARDepth/Info.plist;
