@@ -11,7 +11,7 @@ import ARKit
 
 struct ContentView: View {
     @StateObject private var manager = CameraManager()
-    @State private var maxDepth = Float(5.0)
+    @State private var maxDepth = Float(15.0)
     @State private var minDepth = Float(0.0)
     @State private var tapLocation1: CGPoint? = nil
     @State private var tapLocation2: CGPoint? = nil
@@ -50,8 +50,8 @@ struct ContentView: View {
             }
             
             // Slider controls for max and min depth
-            SliderDepthBoundaryView(val: $maxDepth, label: "Max Depth", minVal: 0, maxVal: 10)
-            SliderDepthBoundaryView(val: $minDepth, label: "Min Depth", minVal: 0, maxVal: 10)
+//            SliderDepthBoundaryView(val: $maxDepth, label: "Max Depth", minVal: 0, maxVal: 10)
+//            SliderDepthBoundaryView(val: $minDepth, label: "Min Depth", minVal: 0, maxVal: 10)
             
             ZStack {
                 MetalTextureColorThresholdDepthView(
@@ -108,8 +108,8 @@ struct ARView: UIViewRepresentable {
     var sceneView = ARSCNView()
     var spheres: [SCNNode] = []
     var tappedPoints: [SCNVector3] = []
-     var lineNode: SCNNode?
-     
+    var lineNode: SCNNode?
+    var planeNode: SCNNode?
     func makeUIView(context: Context) -> ARSCNView {
         sceneView.delegate = context.coordinator
         sceneView.scene = SCNScene()
@@ -163,6 +163,8 @@ struct ARView: UIViewRepresentable {
                        let distance = parent.tappedPoints[0].distance(to: parent.tappedPoints[1])
                        parent.distanceBetweenPoints = distance
                        parent.drawLineBetweenPoints()
+//                       parent.drawSquareBetweenPoints()
+                       parent.drawPointCloudSquareBetweenPoints()
                    }
                }
         
@@ -174,6 +176,11 @@ struct ARView: UIViewRepresentable {
         spheres.removeAll()
         tappedPoints.removeAll()
         distanceBetweenPoints = nil
+        lineNode?.removeAllActions()
+        lineNode = nil
+        
+        planeNode?.removeFromParentNode()
+        planeNode = nil
     }
     
     private mutating func addPoint(_ position: SCNVector3) {
@@ -220,6 +227,100 @@ struct ARView: UIViewRepresentable {
             sceneView.scene.rootNode.addChildNode(lineNode)
             self.lineNode = lineNode
         }
+    
+   
+    private mutating func drawPointCloudSquareBetweenPoints() {
+        guard tappedPoints.count == 2 else { return }
+
+        let start = tappedPoints[0]
+        let end = tappedPoints[1]
+
+        // Calculate the midpoint between the two points
+        let midPoint = SCNVector3(
+            (start.x + end.x) / 2,
+            (start.y + end.y) / 2,
+            (start.z + end.z) / 2
+        )
+
+        // Calculate the distance between the two points for square size
+        let distance = start.distance(to: end)
+        let pointSpacing: Float = 0.005  // Spacing between points in the point cloud
+
+        // Calculate the number of points along each axis
+        let numPoints = Int(distance / pointSpacing)
+
+        for i in 0...numPoints {
+            for j in 0...numPoints {
+                // Calculate position within the plane
+                let xOffset = Float(i) * pointSpacing - distance / 2
+                let yOffset = Float(j) * pointSpacing - distance / 2
+
+                // Offset from the midpoint along the direction vector
+                let position = SCNVector3(
+                    midPoint.x + xOffset,
+                    midPoint.y + yOffset,
+                    midPoint.z
+                )
+
+                let pointNode = createPoint(at: position)
+                sceneView.scene.rootNode.addChildNode(pointNode)
+                spheres.append(pointNode)  // Store each point node for cleanup if needed
+            }
+        }
+    }
+    private func createPoint(at position: SCNVector3) -> SCNNode {
+        let point = SCNSphere(radius: 0.0005)  // Small radius for point size
+        point.firstMaterial?.diffuse.contents = UIColor.green
+
+        let pointNode = SCNNode(geometry: point)
+        pointNode.position = position
+        return pointNode
+    }
+    
+    
+    private mutating func drawSquareBetweenPoints() {
+        guard tappedPoints.count == 2 else { return }
+        
+        let start = tappedPoints[0]
+        let end = tappedPoints[1]
+        
+        // Calculate the midpoint between the two points
+        let midPoint = SCNVector3(
+            (start.x + end.x) / 2,
+            (start.y + end.y) / 2,
+            (start.z + end.z) / 2
+        )
+        
+        // Calculate the distance between the two points for the square size
+        let distance = start.distance(to: end)
+        
+        // Create a square plane geometry with width and height equal to the distance
+        let plane = SCNPlane(width: CGFloat(distance), height: CGFloat(distance))
+        plane.firstMaterial?.diffuse.contents = UIColor.green.withAlphaComponent(0.9)  // Semi-transparent green
+        
+        let planeNode = SCNNode(geometry: plane)
+        planeNode.position = midPoint
+        
+        // Calculate the direction vector from start to end
+        let direction = SCNVector3(
+            start.x - end.x,
+            start.y - end.y,
+            start.z - end.z
+        )
+        
+        // Align the plane parallel to the line segment between start and end points
+        planeNode.look(at: end, up: sceneView.scene.rootNode.worldUp, localFront: planeNode.worldUp)
+        
+        // Rotate the square 90 degrees around the direction vector to make it perpendicular to the line segment
+//        let rotationAngle = Float.pi/2
+//        let rotationAxis = direction
+//        let rotationMatrix = SCNMatrix4MakeRotation(rotationAngle, rotationAxis.x, rotationAxis.y, rotationAxis.z)
+//        planeNode.transform = SCNMatrix4Mult(planeNode.transform, rotationMatrix)
+        
+        // Add the plane node to the scene and store a reference to it
+        sceneView.scene.rootNode.addChildNode(planeNode)
+        self.planeNode = planeNode
+    }
 }
 
 extension SCNVector3 {
