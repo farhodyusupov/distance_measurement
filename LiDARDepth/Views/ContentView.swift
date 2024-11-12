@@ -1,10 +1,3 @@
-///*
-//See LICENSE folder for this sample’s licensing information.
-//
-//Abstract:
-//The app's main user interface.
-//*/
-//
 import SwiftUI
 import SceneKit
 import ARKit
@@ -19,39 +12,68 @@ struct ContentView: View {
     @State private var distanceToPoint2: Float? = nil
     @State private var distanceBetweenPoints: Float? = nil
     @State private var sceneView = ARSCNView()
+    
+    @State private var horizontalDistance: Double = 0.0
+    @State private var verticalDistance: Float = 0.0
     var spheres: [SCNNode] = []
+    
     var body: some View {
         VStack {
             VStack {
-                if let distance1 = distanceToPoint1 {
-                    Text("Distance to Point 1: \(String(format: "%.2f", distance1)) meters")
-                        .font(.headline)
-                        .padding(4)
-                        .background(Color.red.opacity(0.7))
-                        .cornerRadius(8)
-                        .foregroundColor(.white)
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("H Distance")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                        Text(String(format: "%.2f m", distanceBetweenPoints ?? 0.0))
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing) {
+                        Text("V Distance")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                        Text(String(format: "%.2f m", verticalDistance))
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                    }
                 }
-                if let distance2 = distanceToPoint2 {
-                    Text("Distance to Point 2: \(String(format: "%.2f", distance2)) meters")
-                        .font(.headline)
-                        .padding(4)
-                        .background(Color.blue.opacity(0.7))
-                        .cornerRadius(8)
-                        .foregroundColor(.white)
+                .padding(.bottom, 20)
+                
+                Divider()
+                    .background(Color.white.opacity(0.5))
+                    .padding(.horizontal, 10)
+                
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("Comp. Dist.")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                        Text("0.00 m")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing) {
+                        Text("Ball Spd.")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                        Text("0.0 m/s")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                    }
                 }
-                if let distanceBetween = distanceBetweenPoints {
-                    Text("Distance Between Points: \(String(format: "%.2f", distanceBetween)) meters")
-                        .font(.headline)
-                        .padding(4)
-                        .background(Color.gray.opacity(0.7))
-                        .cornerRadius(8)
-                        .foregroundColor(.white)
-                }
+                .padding(.bottom, 20)
             }
+            .padding()
+            .background(Color.black.opacity(0.7))
+            .cornerRadius(10)
             
-            // Slider controls for max and min depth
-//            SliderDepthBoundaryView(val: $maxDepth, label: "Max Depth", minVal: 0, maxVal: 10)
-//            SliderDepthBoundaryView(val: $minDepth, label: "Min Depth", minVal: 0, maxVal: 10)
             
             ZStack {
                 MetalTextureColorThresholdDepthView(
@@ -75,7 +97,6 @@ struct ContentView: View {
                                 tapLocation1 = value.location
                             } else if tapLocation2 == nil {
                                 tapLocation2 = value.location
-                                // Calculate the distance between the two 3D points
                                 if let p1 = distanceToPoint1, let p2 = distanceToPoint2 {
                                     distanceBetweenPoints = abs(p1 - p2)
                                 }
@@ -83,8 +104,9 @@ struct ContentView: View {
                         }
                 )
 
-                ARView(distanceBetweenPoints: $distanceBetweenPoints)
-                                .edgesIgnoringSafeArea(.all)
+                ARView(verticalDistance: $verticalDistance, distanceBetweenPoints: $distanceBetweenPoints)
+                    .edgesIgnoringSafeArea(.all)
+                
                 if let location1 = tapLocation1 {
                     Circle()
                         .fill(Color.red)
@@ -102,14 +124,15 @@ struct ContentView: View {
     }
 }
 
-
 struct ARView: UIViewRepresentable {
+    @Binding var verticalDistance: Float
     @Binding var distanceBetweenPoints: Float?
     var sceneView = ARSCNView()
     var spheres: [SCNNode] = []
     var tappedPoints: [SCNVector3] = []
     var lineNode: SCNNode?
     var planeNode: SCNNode?
+    
     func makeUIView(context: Context) -> ARSCNView {
         sceneView.delegate = context.coordinator
         sceneView.scene = SCNScene()
@@ -137,38 +160,43 @@ struct ARView: UIViewRepresentable {
             self.parent = parent
         }
         
-        @objc func handleTap(_ sender: UITapGestureRecognizer) {
-                   let location = sender.location(in: parent.sceneView)
-                   let hitTestResults = parent.sceneView.hitTest(location, types: [.featurePoint])
-                   
-                   guard let result = hitTestResults.last else { return }
-                   
-                   let transform = result.worldTransform
-                   let position = SCNVector3(
-                       transform.columns.3.x,
-                       transform.columns.3.y,
-                       transform.columns.3.z
-                   )
-                   
-                   // Reset if this is the third point
-                   if parent.tappedPoints.count == 2 {
-                       parent.clearPoints()
-                   }
-                   
-                   // Add the new point and sphere
-                   parent.addPoint(position)
-                   
-                   // Calculate distance if there are exactly two points
-                   if parent.tappedPoints.count == 2 {
-                       let distance = parent.tappedPoints[0].distance(to: parent.tappedPoints[1])
-                       parent.distanceBetweenPoints = distance
-                       parent.drawLineBetweenPoints()
-//                       parent.drawSquareBetweenPoints()
-                       parent.drawPointCloudSquareBetweenPoints()
-                   }
-               }
+        func session(_ session: ARSession, didUpdate frame: ARFrame) {
+            let cameraTransform = frame.camera.transform
+            let cameraPosition = cameraTransform.columns.3
+            let cameraHeight = cameraPosition.z
+            
+            
+        }
         
+        @objc func handleTap(_ sender: UITapGestureRecognizer) {
+            let location = sender.location(in: parent.sceneView)
+            let hitTestResults = parent.sceneView.hitTest(location, types: [.featurePoint])
+            
+            guard let result = hitTestResults.last else { return }
+            let transform = result.worldTransform
+            parent.verticalDistance = transform.columns.3.z
+            let position = SCNVector3(
+                transform.columns.3.x,
+                transform.columns.3.y,
+                transform.columns.3.z
+            )
+            
+            if parent.tappedPoints.count == 2 {
+                parent.clearPoints()  // Clear previous points and line
+            }
+            
+            parent.addPoint(position)
+            
+            if parent.tappedPoints.count == 2 {
+                let distance = parent.tappedPoints[0].distance(to: parent.tappedPoints[1])
+                parent.distanceBetweenPoints = distance
+                parent.drawLineBetweenPoints()
+                parent.drawSquareBetweenPoints()
+//                parent.drawDensePointCloudBetweenPoints()
+            }
+        }
     }
+    
     private mutating func clearPoints() {
         for sphere in spheres {
             sphere.removeFromParentNode()
@@ -176,7 +204,8 @@ struct ARView: UIViewRepresentable {
         spheres.removeAll()
         tappedPoints.removeAll()
         distanceBetweenPoints = nil
-        lineNode?.removeAllActions()
+        
+        lineNode?.removeFromParentNode()  // Clear previous line
         lineNode = nil
         
         planeNode?.removeFromParentNode()
@@ -184,12 +213,13 @@ struct ARView: UIViewRepresentable {
     }
     
     private mutating func addPoint(_ position: SCNVector3) {
-           tappedPoints.append(position)
-           
-           let sphere = createSphere(at: position)
-           sceneView.scene.rootNode.addChildNode(sphere)
-           spheres.append(sphere)
-       }
+        tappedPoints.append(position)
+        
+        let sphere = createSphere(at: position)
+        sceneView.scene.rootNode.addChildNode(sphere)
+        spheres.append(sphere)
+    }
+    
     private func createSphere(at position: SCNVector3) -> SCNNode {
         let sphere = SCNSphere(radius: 0.02)
         let node = SCNNode(geometry: sphere)
@@ -201,125 +231,111 @@ struct ARView: UIViewRepresentable {
         
         return node
     }
-    private mutating func drawLineBetweenPoints() {
-            guard tappedPoints.count == 2 else { return }
-            
-            let start = tappedPoints[0]
-            let end = tappedPoints[1]
-            
-            // Create a cylinder to represent the line
-            let cylinder = SCNCylinder(radius: 0.002, height: CGFloat(start.distance(to: end)))
-            cylinder.firstMaterial?.diffuse.contents = UIColor.yellow
-            
-            let lineNode = SCNNode(geometry: cylinder)
-            
-            // Position the line node at the midpoint between start and end
-            lineNode.position = SCNVector3(
-                (start.x + end.x) / 2,
-                (start.y + end.y) / 2,
-                (start.z + end.z) / 2
-            )
-            
-            // Rotate the line to align with the two points
-            lineNode.look(at: end, up: sceneView.scene.rootNode.worldUp, localFront: lineNode.worldUp)
-            
-            // Add the line node to the scene and store a reference to it
-            sceneView.scene.rootNode.addChildNode(lineNode)
-            self.lineNode = lineNode
-        }
     
-   
-    private mutating func drawPointCloudSquareBetweenPoints() {
+    private mutating func drawLineBetweenPoints() {
         guard tappedPoints.count == 2 else { return }
-
+        
         let start = tappedPoints[0]
         let end = tappedPoints[1]
-
-        // Calculate the midpoint between the two points
+        
+        let cylinder = SCNCylinder(radius: 0.002, height: CGFloat(start.distance(to: end)))
+        cylinder.firstMaterial?.diffuse.contents = UIColor.yellow
+        
+        let lineNode = SCNNode(geometry: cylinder)
+        
+        lineNode.position = SCNVector3(
+            (start.x + end.x) / 2,
+            (start.y + end.y) / 2,
+            (start.z + end.z) / 2
+        )
+        
+        lineNode.look(at: end, up: sceneView.scene.rootNode.worldUp, localFront: lineNode.worldUp)
+        
+        sceneView.scene.rootNode.addChildNode(lineNode)
+        self.lineNode = lineNode
+    }
+    private mutating func drawSquareBetweenPoints() {
+           guard tappedPoints.count == 2 else { return }
+           
+           let start = tappedPoints[0]
+           let end = tappedPoints[1]
+           
+           // Calculate the midpoint between the two points
+           let midPoint = SCNVector3(
+               (start.x + end.x) / 2,
+               (start.y + end.y) / 2,
+               (start.z + end.z) / 2
+           )
+           
+           // Calculate the distance between the two points for the square size
+           let distance = start.distance(to: end)
+           
+           // Create a square plane geometry with width and height equal to the distance
+           let plane = SCNPlane(width: CGFloat(distance), height: CGFloat(distance))
+           plane.firstMaterial?.diffuse.contents = UIColor.green.withAlphaComponent(0.9)  // Semi-transparent green
+           
+           let planeNode = SCNNode(geometry: plane)
+           planeNode.position = midPoint
+           
+           // Calculate the direction vector from start to end
+           let direction = SCNVector3(
+               start.x - end.x,
+               start.y - end.y,
+               start.z - end.z
+           )
+           
+           // Align the plane parallel to the line segment between start and end points
+           planeNode.look(at: end, up: sceneView.scene.rootNode.worldUp, localFront: planeNode.worldUp)
+           
+           // Rotate the square 90 degrees around the direction vector to make it perpendicular to the line segment
+   //        let rotationAngle = Float.pi/2
+   //        let rotationAxis = direction
+   //        let rotationMatrix = SCNMatrix4MakeRotation(rotationAngle, rotationAxis.x, rotationAxis.y, rotationAxis.z)
+   //        planeNode.transform = SCNMatrix4Mult(planeNode.transform, rotationMatrix)
+           
+           // Add the plane node to the scene and store a reference to it
+           sceneView.scene.rootNode.addChildNode(planeNode)
+           self.planeNode = planeNode
+       }
+    private mutating func drawDensePointCloudBetweenPoints() {
+        guard tappedPoints.count == 2 else { return }
+        
+        let start = tappedPoints[0]
+        let end = tappedPoints[1]
+        
         let midPoint = SCNVector3(
             (start.x + end.x) / 2,
             (start.y + end.y) / 2,
             (start.z + end.z) / 2
         )
-
-        // Calculate the distance between the two points for square size
+        
         let distance = start.distance(to: end)
-        let pointSpacing: Float = 0.005  // Spacing between points in the point cloud
+        let pointCount = 500
 
-        // Calculate the number of points along each axis
-        let numPoints = Int(distance / pointSpacing)
+        for _ in 0..<pointCount {
+            let randomOffsetX = Float.random(in: -distance / 2...distance / 2)
+            let randomOffsetY = Float.random(in: -distance / 2...distance / 2)
+            let randomOffsetZ = Float.random(in: -distance / 2...distance / 2)
+            
+            let position = SCNVector3(
+                midPoint.x + randomOffsetX,
+                midPoint.y + randomOffsetY,
+                midPoint.z + randomOffsetZ
+            )
 
-        for i in 0...numPoints {
-            for j in 0...numPoints {
-                // Calculate position within the plane
-                let xOffset = Float(i) * pointSpacing - distance / 2
-                let yOffset = Float(j) * pointSpacing - distance / 2
-
-                // Offset from the midpoint along the direction vector
-                let position = SCNVector3(
-                    midPoint.x + xOffset,
-                    midPoint.y + yOffset,
-                    midPoint.z
-                )
-
-                let pointNode = createPoint(at: position)
-                sceneView.scene.rootNode.addChildNode(pointNode)
-                spheres.append(pointNode)  // Store each point node for cleanup if needed
-            }
+            let pointNode = createPoint(at: position)
+            sceneView.scene.rootNode.addChildNode(pointNode)
+            spheres.append(pointNode)
         }
     }
+
     private func createPoint(at position: SCNVector3) -> SCNNode {
-        let point = SCNSphere(radius: 0.0005)  // Small radius for point size
-        point.firstMaterial?.diffuse.contents = UIColor.green
+        let point = SCNSphere(radius: 0.003)
+        point.firstMaterial?.diffuse.contents = UIColor.green.withAlphaComponent(0.7)
 
         let pointNode = SCNNode(geometry: point)
         pointNode.position = position
         return pointNode
-    }
-    
-    
-    private mutating func drawSquareBetweenPoints() {
-        guard tappedPoints.count == 2 else { return }
-        
-        let start = tappedPoints[0]
-        let end = tappedPoints[1]
-        
-        // Calculate the midpoint between the two points
-        let midPoint = SCNVector3(
-            (start.x + end.x) / 2,
-            (start.y + end.y) / 2,
-            (start.z + end.z) / 2
-        )
-        
-        // Calculate the distance between the two points for the square size
-        let distance = start.distance(to: end)
-        
-        // Create a square plane geometry with width and height equal to the distance
-        let plane = SCNPlane(width: CGFloat(distance), height: CGFloat(distance))
-        plane.firstMaterial?.diffuse.contents = UIColor.green.withAlphaComponent(0.9)  // Semi-transparent green
-        
-        let planeNode = SCNNode(geometry: plane)
-        planeNode.position = midPoint
-        
-        // Calculate the direction vector from start to end
-        let direction = SCNVector3(
-            start.x - end.x,
-            start.y - end.y,
-            start.z - end.z
-        )
-        
-        // Align the plane parallel to the line segment between start and end points
-        planeNode.look(at: end, up: sceneView.scene.rootNode.worldUp, localFront: planeNode.worldUp)
-        
-        // Rotate the square 90 degrees around the direction vector to make it perpendicular to the line segment
-//        let rotationAngle = Float.pi/2
-//        let rotationAxis = direction
-//        let rotationMatrix = SCNMatrix4MakeRotation(rotationAngle, rotationAxis.x, rotationAxis.y, rotationAxis.z)
-//        planeNode.transform = SCNMatrix4Mult(planeNode.transform, rotationMatrix)
-        
-        // Add the plane node to the scene and store a reference to it
-        sceneView.scene.rootNode.addChildNode(planeNode)
-        self.planeNode = planeNode
     }
 }
 
@@ -329,29 +345,5 @@ extension SCNVector3 {
         let dy = self.y - vector.y
         let dz = self.z - vector.z
         return sqrt(dx * dx + dy * dy + dz * dz)
-    }
-}
-
-struct SliderDepthBoundaryView: View {
-    @Binding var val: Float
-    var label: String
-    var minVal: Float
-    var maxVal: Float
-    let stepsCount = Float(200.0)
-    
-    var body: some View {
-        HStack {
-            Text(String(format: " %@: %.2f", label, val))
-            Slider(
-                value: $val,
-                in: minVal...maxVal,
-                step: (maxVal - minVal) / stepsCount
-            ) {
-            } minimumValueLabel: {
-                Text(String(minVal))
-            } maximumValueLabel: {
-                Text(String(maxVal))
-            }
-        }
     }
 }
