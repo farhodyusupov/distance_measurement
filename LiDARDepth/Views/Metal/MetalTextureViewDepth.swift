@@ -1,10 +1,3 @@
-/*
-See LICENSE folder for this sample’s licensing information.
-
-Abstract:
-A view that draws depth textures.
-*/
-
 import Foundation
 import SwiftUI
 import MetalKit
@@ -12,11 +5,11 @@ import Metal
 
 struct MetalTextureDepthView: UIViewRepresentable, MetalRepresentable {
     var rotationAngle: Double
-
     @Binding var maxDepth: Float
     @Binding var minDepth: Float
     var capturedData: CameraCapturedData
-    var targetArea: CGRect
+    var targetArea: CGRect  // New property for defining the target area in screen space
+
     func makeCoordinator() -> MTKDepthTextureCoordinator {
         MTKDepthTextureCoordinator(parent: self)
     }
@@ -45,38 +38,38 @@ final class MTKDepthTextureCoordinator: MTKCoordinator<MetalTextureDepthView> {
     }
     
     override func draw(in view: MTKView) {
-            guard parent.capturedData.depth != nil else {
-                print("There's no content to display.")
-                return
-            }
-            guard let commandBuffer = metalCommandQueue.makeCommandBuffer() else { return }
-            guard let passDescriptor = view.currentRenderPassDescriptor else { return }
-            guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: passDescriptor) else { return }
-
-            // Configure the scissor rectangle to limit rendering area to `targetArea`
-            let scale = view.contentScaleFactor
-            let scissorRect = MTLScissorRect(
-                x: Int(parent.targetArea.origin.x * scale),
-                y: Int(parent.targetArea.origin.y * scale),
-                width: Int(parent.targetArea.width * scale),
-                height: Int(parent.targetArea.height * scale)
-            )
-            encoder.setScissorRect(scissorRect)
-
-            // Vertex and Texture coordinates data (x,y,u,v) * 4 ordered for triangle strip.
-            let vertexData: [Float] = [  -1, -1, 1, 1,
-                                         1, -1, 1, 0,
-                                         -1, 1, 0, 1,
-                                         1, 1, 0, 0]
-            encoder.setVertexBytes(vertexData, length: vertexData.count * MemoryLayout<Float>.stride, index: 0)
-            encoder.setFragmentBytes(&parent.minDepth, length: MemoryLayout<Float>.stride, index: 0)
-            encoder.setFragmentBytes(&parent.maxDepth, length: MemoryLayout<Float>.stride, index: 1)
-            encoder.setFragmentTexture(parent.capturedData.depth!, index: 0)
-            encoder.setDepthStencilState(depthState)
-            encoder.setRenderPipelineState(pipelineState)
-            encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-            encoder.endEncoding()
-            commandBuffer.present(view.currentDrawable!)
-            commandBuffer.commit()
+        guard parent.capturedData.depth != nil else {
+            print("There's no content to display.")
+            return
         }
+        guard let commandBuffer = metalCommandQueue.makeCommandBuffer() else { return }
+        guard let passDescriptor = view.currentRenderPassDescriptor else { return }
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: passDescriptor) else { return }
+
+        // Configure the scissor rectangle to limit rendering area to `targetArea`
+        let scale = view.contentScaleFactor
+        let scissorRect = MTLScissorRect(
+            x: Int(parent.targetArea.origin.x * scale),
+            y: Int(parent.targetArea.origin.y * scale),
+            width: Int(parent.targetArea.width * scale),
+            height: Int(parent.targetArea.height * scale)
+        )
+        encoder.setScissorRect(scissorRect)
+
+        // Vertex and Texture coordinates data (x,y,u,v) * 4 ordered for triangle strip.
+        let vertexData: [Float] = [  -1, -1, 1, 1,
+                                     1, -1, 1, 0,
+                                     -1, 1, 0, 1,
+                                     1, 1, 0, 0]
+        encoder.setVertexBytes(vertexData, length: vertexData.count * MemoryLayout<Float>.stride, index: 0)
+        encoder.setFragmentBytes(&parent.minDepth, length: MemoryLayout<Float>.stride, index: 0)
+        encoder.setFragmentBytes(&parent.maxDepth, length: MemoryLayout<Float>.stride, index: 1)
+        encoder.setFragmentTexture(parent.capturedData.depth!, index: 0)
+        encoder.setDepthStencilState(depthState)
+        encoder.setRenderPipelineState(pipelineState)
+        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+        encoder.endEncoding()
+        commandBuffer.present(view.currentDrawable!)
+        commandBuffer.commit()
+    }
 }

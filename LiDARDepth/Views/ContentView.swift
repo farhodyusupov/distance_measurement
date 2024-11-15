@@ -15,7 +15,10 @@ struct ContentView: View {
     
     @State private var horizontalDistance: Double = 0.0
     @State private var verticalDistance: Float = 0.0
-    
+//    @State private var targetArea: CGRect = .zero
+    private let targetArea = CGRect(x: 0, y: 0, width: 200, height: 200)
+    @State private var showDepthView = false
+
     var body: some View {
         VStack {
             VStack {
@@ -96,64 +99,42 @@ struct ContentView: View {
                             } else if tapLocation2 == nil {
                                 tapLocation2 = value.location
                                 if let start = tapLocation1, let end = tapLocation2 {
-                                    renderDepthMap(start: start, end: end)
+                                    // Calculate the target area
+                                    let minX = min(start.x, end.x)
+                                    let minY = min(start.y, end.y)
+                                    let width = abs(start.x - end.x)
+                                    let height = abs(start.y - end.y)
+                                    
+//                                    targetArea = CGRect(x: minX, y: minY, width: width, height: height)
+                                    
+                                    // Toggle depth view visibility
+                                    showDepthView.toggle()
                                 }
-                                // Reset points for the next square
+                                // Reset points for the next interaction
                                 tapLocation1 = nil
                                 tapLocation2 = nil
                             }
                         }
                 )
-
-                ARView(verticalDistance: $verticalDistance, distanceBetweenPoints: $distanceBetweenPoints)
-                    .edgesIgnoringSafeArea(.all)
+//                ARView(verticalDistance: $verticalDistance, distanceBetweenPoints: $distanceBetweenPoints)
+//                    .edgesIgnoringSafeArea(.all)
                 
-                if let location1 = tapLocation1 {
-                    Circle()
-                        .fill(Color.red)
-                        .frame(width: 10, height: 10)
-                        .position(x: location1.x, y: location1.y)
-                }
-                if let location2 = tapLocation2 {
-                    Circle()
-                        .fill(Color.blue)
-                        .frame(width: 10, height: 10)
-                        .position(x: location2.x, y: location2.y)
+                if showDepthView {
+                    MetalTextureDepthView(
+                        rotationAngle: 0,
+                        maxDepth: $maxDepth,
+                        minDepth: $minDepth,
+                        capturedData: manager.capturedData,
+                        targetArea: targetArea
+                    )
+                    .frame(width: 200, height: 200)
+                    .transition(.scale) // Adds a smooth transition effect
                 }
             }
         }
     }
     
-    private func renderDepthMap(start: CGPoint, end: CGPoint) {
-        // Ensure depth data is available
-        guard let depthData = manager.capturedData.depth else { return }
-        
-        // Define the square's boundary in screen coordinates
-        let minX = min(start.x, end.x)
-        let maxX = max(start.x, end.x)
-        let minY = min(start.y, end.y)
-        let maxY = max(start.y, end.y)
-        
-        let targetSquare = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
-        
-        // Call Metal function to render depth map within the defined square
-        let metalView = MetalTextureColorThresholdDepthView(
-            rotationAngle: 0,
-            maxDepth: $maxDepth,
-            minDepth: $minDepth,
-            capturedData: manager.capturedData,
-            tapLocation1: $tapLocation1,
-            tapLocation2: $tapLocation2,
-            distanceToPoint1: $distanceToPoint1,
-            distanceToPoint2: $distanceToPoint2,
-            fx: 500.0,
-            fy: 500.0,
-            cx: 160.0,
-            cy: 120.0
-        )
-        
-        metalView.renderDepthMapForSquare(from: start, to: end)
-    }
+
 }
 
 struct ARView: UIViewRepresentable {

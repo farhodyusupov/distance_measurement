@@ -20,7 +20,7 @@ struct MetalTextureColorThresholdDepthView: UIViewRepresentable, MetalRepresenta
     var fy: Float = 500.0
     var cx: Float = 160.0
     var cy: Float = 120.0
-    
+//    var targetArea: CGRect
     func makeCoordinator() -> MTKColorThresholdDepthTextureCoordinator {
         MTKColorThresholdDepthTextureCoordinator(parent: self)
     }
