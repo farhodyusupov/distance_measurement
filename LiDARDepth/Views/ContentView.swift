@@ -15,7 +15,6 @@ struct ContentView: View {
     
     @State private var horizontalDistance: Double = 0.0
     @State private var verticalDistance: Float = 0.0
-    var spheres: [SCNNode] = []
     
     var body: some View {
         VStack {
@@ -74,7 +73,6 @@ struct ContentView: View {
             .background(Color.black.opacity(0.7))
             .cornerRadius(10)
             
-            
             ZStack {
                 MetalTextureColorThresholdDepthView(
                     rotationAngle: 0,
@@ -97,9 +95,12 @@ struct ContentView: View {
                                 tapLocation1 = value.location
                             } else if tapLocation2 == nil {
                                 tapLocation2 = value.location
-                                if let p1 = distanceToPoint1, let p2 = distanceToPoint2 {
-                                    distanceBetweenPoints = abs(p1 - p2)
+                                if let start = tapLocation1, let end = tapLocation2 {
+                                    renderDepthMap(start: start, end: end)
                                 }
+                                // Reset points for the next square
+                                tapLocation1 = nil
+                                tapLocation2 = nil
                             }
                         }
                 )
@@ -121,6 +122,37 @@ struct ContentView: View {
                 }
             }
         }
+    }
+    
+    private func renderDepthMap(start: CGPoint, end: CGPoint) {
+        // Ensure depth data is available
+        guard let depthData = manager.capturedData.depth else { return }
+        
+        // Define the square's boundary in screen coordinates
+        let minX = min(start.x, end.x)
+        let maxX = max(start.x, end.x)
+        let minY = min(start.y, end.y)
+        let maxY = max(start.y, end.y)
+        
+        let targetSquare = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+        
+        // Call Metal function to render depth map within the defined square
+        let metalView = MetalTextureColorThresholdDepthView(
+            rotationAngle: 0,
+            maxDepth: $maxDepth,
+            minDepth: $minDepth,
+            capturedData: manager.capturedData,
+            tapLocation1: $tapLocation1,
+            tapLocation2: $tapLocation2,
+            distanceToPoint1: $distanceToPoint1,
+            distanceToPoint2: $distanceToPoint2,
+            fx: 500.0,
+            fy: 500.0,
+            cx: 160.0,
+            cy: 120.0
+        )
+        
+        metalView.renderDepthMapForSquare(from: start, to: end)
     }
 }
 
@@ -163,7 +195,7 @@ struct ARView: UIViewRepresentable {
         func session(_ session: ARSession, didUpdate frame: ARFrame) {
             let cameraTransform = frame.camera.transform
             let cameraPosition = cameraTransform.columns.3
-            let cameraHeight = cameraPosition.z
+            _ = cameraPosition.z
             
             
         }
@@ -182,7 +214,7 @@ struct ARView: UIViewRepresentable {
             )
             
             if parent.tappedPoints.count == 2 {
-                parent.clearPoints()  // Clear previous points and line
+                parent.clearPoints()
             }
             
             parent.addPoint(position)
@@ -191,8 +223,7 @@ struct ARView: UIViewRepresentable {
                 let distance = parent.tappedPoints[0].distance(to: parent.tappedPoints[1])
                 parent.distanceBetweenPoints = distance
                 parent.drawLineBetweenPoints()
-                parent.drawSquareBetweenPoints()
-//                parent.drawDensePointCloudBetweenPoints()
+
             }
         }
     }
@@ -254,89 +285,8 @@ struct ARView: UIViewRepresentable {
         sceneView.scene.rootNode.addChildNode(lineNode)
         self.lineNode = lineNode
     }
-    private mutating func drawSquareBetweenPoints() {
-           guard tappedPoints.count == 2 else { return }
-           
-           let start = tappedPoints[0]
-           let end = tappedPoints[1]
-           
-           // Calculate the midpoint between the two points
-           let midPoint = SCNVector3(
-               (start.x + end.x) / 2,
-               (start.y + end.y) / 2,
-               (start.z + end.z) / 2
-           )
-           
-           // Calculate the distance between the two points for the square size
-           let distance = start.distance(to: end)
-           
-           // Create a square plane geometry with width and height equal to the distance
-           let plane = SCNPlane(width: CGFloat(distance), height: CGFloat(distance))
-           plane.firstMaterial?.diffuse.contents = UIColor.green.withAlphaComponent(0.9)  // Semi-transparent green
-           
-           let planeNode = SCNNode(geometry: plane)
-           planeNode.position = midPoint
-           
-           // Calculate the direction vector from start to end
-           let direction = SCNVector3(
-               start.x - end.x,
-               start.y - end.y,
-               start.z - end.z
-           )
-           
-           // Align the plane parallel to the line segment between start and end points
-           planeNode.look(at: end, up: sceneView.scene.rootNode.worldUp, localFront: planeNode.worldUp)
-           
-           // Rotate the square 90 degrees around the direction vector to make it perpendicular to the line segment
-   //        let rotationAngle = Float.pi/2
-   //        let rotationAxis = direction
-   //        let rotationMatrix = SCNMatrix4MakeRotation(rotationAngle, rotationAxis.x, rotationAxis.y, rotationAxis.z)
-   //        planeNode.transform = SCNMatrix4Mult(planeNode.transform, rotationMatrix)
-           
-           // Add the plane node to the scene and store a reference to it
-           sceneView.scene.rootNode.addChildNode(planeNode)
-           self.planeNode = planeNode
-       }
-    private mutating func drawDensePointCloudBetweenPoints() {
-        guard tappedPoints.count == 2 else { return }
-        
-        let start = tappedPoints[0]
-        let end = tappedPoints[1]
-        
-        let midPoint = SCNVector3(
-            (start.x + end.x) / 2,
-            (start.y + end.y) / 2,
-            (start.z + end.z) / 2
-        )
-        
-        let distance = start.distance(to: end)
-        let pointCount = 500
-
-        for _ in 0..<pointCount {
-            let randomOffsetX = Float.random(in: -distance / 2...distance / 2)
-            let randomOffsetY = Float.random(in: -distance / 2...distance / 2)
-            let randomOffsetZ = Float.random(in: -distance / 2...distance / 2)
-            
-            let position = SCNVector3(
-                midPoint.x + randomOffsetX,
-                midPoint.y + randomOffsetY,
-                midPoint.z + randomOffsetZ
-            )
-
-            let pointNode = createPoint(at: position)
-            sceneView.scene.rootNode.addChildNode(pointNode)
-            spheres.append(pointNode)
-        }
-    }
-
-    private func createPoint(at position: SCNVector3) -> SCNNode {
-        let point = SCNSphere(radius: 0.003)
-        point.firstMaterial?.diffuse.contents = UIColor.green.withAlphaComponent(0.7)
-
-        let pointNode = SCNNode(geometry: point)
-        pointNode.position = position
-        return pointNode
-    }
+    
+    
 }
 
 extension SCNVector3 {
