@@ -445,7 +445,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"LiDARDepth/Preview Content\"";
+<<<<<<< HEAD
 				DEVELOPMENT_TEAM = 5272YF6DP5;
+=======
+				DEVELOPMENT_TEAM = Y84Q82Q5S8;
+>>>>>>> ca84b6c43338aeb84a079ea37216d8c8a8f372a7
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LiDARDepth/Info.plist;
@@ -469,7 +473,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+<<<<<<< HEAD
 				PRODUCT_BUNDLE_IDENTIFIER = "com.depth-distance";
+=======
+				PRODUCT_BUNDLE_IDENTIFIER = com.sohee;
+>>>>>>> ca84b6c43338aeb84a079ea37216d8c8a8f372a7
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -490,7 +498,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"LiDARDepth/Preview Content\"";
+<<<<<<< HEAD
 				DEVELOPMENT_TEAM = 5272YF6DP5;
+=======
+				DEVELOPMENT_TEAM = Y84Q82Q5S8;
+>>>>>>> ca84b6c43338aeb84a079ea37216d8c8a8f372a7
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LiDARDepth/Info.plist;
@@ -514,7 +526,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+<<<<<<< HEAD
 				PRODUCT_BUNDLE_IDENTIFIER = "com.depth-distance";
+=======
+				PRODUCT_BUNDLE_IDENTIFIER = com.sohee;
+>>>>>>> ca84b6c43338aeb84a079ea37216d8c8a8f372a7
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
