@@ -9,6 +9,14 @@ import SwiftUI
 
 extension View {
     
+    func toast(
+            message: String,
+            isPresented: Binding<Bool>,
+            duration: TimeInterval = 3.0
+        ) -> some View {
+            self.modifier(ToastModifier(message: message, duration: duration, isPresented: isPresented))
+        }
+    
     func calcAspect(orientation: UIImage.Orientation, texture: MTLTexture?) -> CGFloat {
         guard let texture = texture else { return 1 }
         switch orientation {

@@ -12,9 +12,13 @@ struct ContentView: View {
     @State private var distanceToPoint2: Float? = nil
     @State private var distanceBetweenPoints: Float? = nil
     @State private var sceneView = ARSCNView()
+    @State private var showBallToast = false
+    @State private var showHoleCupToast = false
+    @State private var isTapped = false
     
     @State private var horizontalDistance: Double = 0.0
     @State private var verticalDistance: Float = 0.0
+    @State private var isInit: Bool = false
     var spheres: [SCNNode] = []
     
     var body: some View {
@@ -104,8 +108,31 @@ struct ContentView: View {
                         }
                 )
                 
-                ARView(verticalDistance: $verticalDistance, distanceBetweenPoints: $distanceBetweenPoints)
+                ARView(verticalDistance: $verticalDistance, distanceBetweenPoints: $distanceBetweenPoints, isTapped: $isTapped, showBallToast: $showBallToast, showHoleCupToast: $showHoleCupToast)
                     .edgesIgnoringSafeArea(.all)
+                
+                if showBallToast {
+                    ToastView(message: "ballMsg".localized())
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                withAnimation {
+                                    showBallToast = false
+                                }
+                            }
+                        }
+                }
+                
+                if showHoleCupToast {
+                    ToastView(message: "holeCupMsg".localized())
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                withAnimation {
+                                    showHoleCupToast = false
+                                }
+                            }
+                        }
+                }
+                
                 
                 if let location1 = tapLocation1 {
                     //                    Circle()
@@ -121,12 +148,20 @@ struct ContentView: View {
                 }
             }
         }
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                showBallToast = true
+            }
+        }
     }
 }
 
 struct ARView: UIViewRepresentable {
     @Binding var verticalDistance: Float
     @Binding var distanceBetweenPoints: Float?
+    @Binding var isTapped: Bool
+    @Binding var showBallToast: Bool
+    @Binding var showHoleCupToast: Bool
     var sceneView = ARSCNView()
     var spheres: [SCNNode] = []
     var tappedPoints: [SCNVector3] = []
@@ -158,23 +193,15 @@ struct ARView: UIViewRepresentable {
     
     class Coordinator: NSObject, ARSCNViewDelegate {
         var parent: ARView
+        private var isSessionInitialized = false
         private var feedbackCircles: [UIView] = []
         
         init(_ parent: ARView) {
             self.parent = parent
         }
         
-        func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
-                    // 세션이 초기화되고 앵커가 추가된 후 첫 번째 메시지 표시
-                    if anchors.isEmpty == false {
-                       // DispatchQueue.main.async {
-                            self.parent.showToast(message: "공을 클릭해주세요")
-                            print("공을 클릭해주세요")
-                        //}
-                    }
-                }
-        
         func session(_ session: ARSession, didUpdate frame: ARFrame) {
+            
             let cameraTransform = frame.camera.transform
             let cameraPosition = cameraTransform.columns.3
             let cameraHeight = cameraPosition.z
@@ -192,7 +219,11 @@ struct ARView: UIViewRepresentable {
                 transform.columns.3.y,
                 transform.columns.3.z
             )
-            
+            if !parent.isTapped {
+                parent.isTapped = true
+                parent.showBallToast = false
+                parent.showHoleCupToast = true
+            }
             
             if parent.tappedPoints.count == 2 {
                 parent.clearPoints()  // Clear previous points and line
@@ -204,10 +235,6 @@ struct ARView: UIViewRepresentable {
             parent.addPoint(position)
             showTap(at: CGPoint(x: CGFloat(parent.sceneView.projectPoint(position).x),
                                 y: CGFloat(parent.sceneView.projectPoint(position).y)))
-            if parent.tappedPoints.count == 1 {
-                            // 첫 번째 클릭: '홀컵을 클릭하세요' 메시지 표시
-                            parent.showToast(message: "홀컵을 클릭해주세요")
-                        }
             
             if parent.tappedPoints.count == 2 {
                 let distance = parent.tappedPoints[0].distance(to: parent.tappedPoints[1])
@@ -487,30 +514,6 @@ struct ARView: UIViewRepresentable {
         pointNode.position = position
         return pointNode
     }
-    
-    func showToast(message : String, font: UIFont = UIFont.systemFont(ofSize: 14.0)) {
-        let toastLabel = UILabel(frame:
-                                    CGRect(x: sceneView.bounds.width + UIScreen.main.bounds.width/2 - 75,
-                                           y: sceneView.frame.size.height + UIScreen.main.bounds.height/5 * 2,
-                                           width: 150,
-                                           height: 35)
-                                 
-        )
-        toastLabel.backgroundColor = UIColor.black
-        toastLabel.textColor = UIColor.white
-        toastLabel.font = font
-        toastLabel.textAlignment = .center;
-        toastLabel.text = message
-        toastLabel.alpha = 1.0
-        toastLabel.layer.cornerRadius = 10;
-        toastLabel.clipsToBounds  =  true
-        sceneView.addSubview(toastLabel)
-        UIView.animate(withDuration: 3.0, delay: 1.0, options: .curveEaseOut, animations: {
-            toastLabel.alpha = 0.0
-        }, completion: {(isCompleted) in
-            toastLabel.removeFromSuperview()
-        })
-    }
 }
 
 extension SCNVector3 {
@@ -523,4 +526,9 @@ extension SCNVector3 {
 }
 
 
-
+extension String {
+    func localized(comment: String = "") -> String {
+        return NSLocalizedString(self, comment: comment)
+    }
+    
+}
