@@ -108,6 +108,7 @@ struct ContentView: View {
                             }
                         }
                 )
+
                 
                 ARView(verticalDistance: $verticalDistance, distanceBetweenPoints: $distanceBetweenPoints, isTapped: $isTapped, showBallToast: $showBallToast, showHoleCupToast: $showHoleCupToast)
                     .edgesIgnoringSafeArea(.all)
@@ -141,6 +142,19 @@ struct ContentView: View {
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 showBallToast = true
+
+                ARView(
+                    verticalDistance: $verticalDistance,
+                    distanceBetweenPoints: $distanceBetweenPoints,
+                    manager: manager,
+                    fx: 500.0,
+                    fy: 500.0,
+                    cx: 160.0,
+                    cy: 120.0
+                )
+                .edgesIgnoringSafeArea(.all)
+              
+            
             }
         }
     }
@@ -241,9 +255,7 @@ struct ARView: UIViewRepresentable {
                 parent.distanceBetweenPoints = distance
                 parent.drawLineBetweenPoints()
                 parent.drawDensePointCloudWithDepth()
-                parent.drawCurveBetweenPoints()
-                parent.drawSquareBetweenPoints()
-                parent.drawDensePointCloudBetweenPoints()
+
 
             }
         }
@@ -320,6 +332,7 @@ struct ARView: UIViewRepresentable {
         self.lineNode = lineNode
     }
     
+
     mutating func drawCurveBetweenPoints() {
         guard tappedPoints.count == 2 else { return }
         
@@ -472,7 +485,8 @@ struct ARView: UIViewRepresentable {
         sceneView.scene.rootNode.addChildNode(planeNode)
         self.planeNode = planeNode
     }
-    private mutating func drawDensePointCloudBetweenPoints() {
+   
+    private mutating func drawDensePointCloudWithDepth() {
 
         guard tappedPoints.count == 2 else { return }
         guard let depthData = manager.capturedData.depth else { return } // Ensure depth data is available
@@ -490,7 +504,6 @@ struct ARView: UIViewRepresentable {
             (start.y + end.y) / 2,
             (start.z + end.z) / 2
         )
-
         let horizontalDirection = SCNVector3(
             end.x - start.x,0,
             end.z - start.z
@@ -545,14 +558,12 @@ struct ARView: UIViewRepresentable {
         guard length > 0 else { return SCNVector3(0, 0, 0) }
         return SCNVector3(vector.x / length, vector.y / length, vector.z / length)
     }
-
-
     
-    
+
     private func createPoint(at position: SCNVector3) -> SCNNode {
         let point = SCNSphere(radius: 0.003)
         point.firstMaterial?.diffuse.contents = UIColor.green.withAlphaComponent(0.7)
-        
+
         let pointNode = SCNNode(geometry: point)
         pointNode.position = position
         return pointNode
