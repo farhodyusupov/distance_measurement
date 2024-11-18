@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0C58B19C2CE73E6C000DBA5D /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C58B19B2CE73E64000DBA5D /* ToastView.swift */; };
+		0C58B1A52CEAB89A000DBA5D /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0C58B1A32CEAB89A000DBA5D /* Localizable.strings */; };
 		AE2C81C1273818FF001BDCC7 /* MetalTextureColorZap.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE2C81C0273818FF001BDCC7 /* MetalTextureColorZap.swift */; };
 		AE2C81C3273961FF001BDCC7 /* MetalTextureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE921D37270D7B41000E95C6 /* MetalTextureView.swift */; };
 		AE2C81C427396203001BDCC7 /* MetalTextureColorThresholdDepth.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE2DD57D2732870500FAB8A5 /* MetalTextureColorThresholdDepth.swift */; };
@@ -32,6 +34,9 @@
 
 /* Begin PBXFileReference section */
 		0C34ECABC9005D93C0DF4297 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		0C58B19B2CE73E64000DBA5D /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
+		0C58B1A42CEAB89A000DBA5D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		0C58B1A62CEABF1A000DBA5D /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9ED80CBFEB14F0F0F5121BC6 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
 		AE18F046274A126C008BC9E3 /* AVFCapture.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AVFCapture.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE18F048274A1272008BC9E3 /* CMCapture.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CMCapture.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -100,6 +105,7 @@
 		AE921D28270D7B02000E95C6 /* LiDARDepth */ = {
 			isa = PBXGroup;
 			children = (
+				0C58B1A32CEAB89A000DBA5D /* Localizable.strings */,
 				E8B5A00F2CE1C2EA002EC18D /* screnshots */,
 				E8F1BD572CD9F59800CD3A44 /* ARMeasureViewController.swift */,
 				E8F1BD552CD9F22D00CD3A44 /* ARMeasureView.swift */,
@@ -151,6 +157,7 @@
 		AEC8871B272EB01200ED6FCC /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0C58B19B2CE73E64000DBA5D /* ToastView.swift */,
 				AE921D2B270D7B02000E95C6 /* ContentView.swift */,
 				AEE83E8F2743EFE800790BF9 /* DepthOverlay.swift */,
 				AEC8871C272ED13C00ED6FCC /* ZoomOnTap.swift */,
@@ -240,6 +247,7 @@
 			knownRegions = (
 				en,
 				Base,
+				ko,
 			);
 			mainGroup = AE921D1D270D7B02000E95C6;
 			productRefGroup = AE921D27270D7B02000E95C6 /* Products */;
@@ -256,6 +264,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0C58B1A52CEAB89A000DBA5D /* Localizable.strings in Resources */,
 				AE921D31270D7B04000E95C6 /* Preview Assets.xcassets in Resources */,
 				AE921D2E270D7B04000E95C6 /* Assets.xcassets in Resources */,
 			);
@@ -272,6 +281,7 @@
 				AEAC8EBD27291512001CC1D5 /* CVPixelBuffer+Extension.swift in Sources */,
 				AE9AD78D270ECD01001218B2 /* CameraController.swift in Sources */,
 				AE9AD789270ECC86001218B2 /* shaders.metal in Sources */,
+				0C58B19C2CE73E6C000DBA5D /* ToastView.swift in Sources */,
 				AE2C81C62739620E001BDCC7 /* MetalTextureViewColor.swift in Sources */,
 				AED0C8F52753C969006E3F11 /* MetalPointCloud.swift in Sources */,
 				AE2C81C1273818FF001BDCC7 /* MetalTextureColorZap.swift in Sources */,
@@ -292,12 +302,25 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXVariantGroup section */
+		0C58B1A32CEAB89A000DBA5D /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0C58B1A42CEAB89A000DBA5D /* en */,
+				0C58B1A62CEABF1A000DBA5D /* ko */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		AE921D32270D7B04000E95C6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9ED80CBFEB14F0F0F5121BC6 /* SampleCode.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
@@ -360,6 +383,7 @@
 			baseConfigurationReference = 9ED80CBFEB14F0F0F5121BC6 /* SampleCode.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
@@ -421,7 +445,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"LiDARDepth/Preview Content\"";
-				DEVELOPMENT_TEAM = P388XG72DG;
+				DEVELOPMENT_TEAM = 5272YF6DP5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LiDARDepth/Info.plist;
@@ -445,7 +469,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.LiDARDepth${SAMPLE_CODE_DISAMBIGUATOR}";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.depth-distance";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -466,7 +490,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"LiDARDepth/Preview Content\"";
-				DEVELOPMENT_TEAM = P388XG72DG;
+				DEVELOPMENT_TEAM = 5272YF6DP5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LiDARDepth/Info.plist;
@@ -490,7 +514,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.example.apple-samplecode.LiDARDepth${SAMPLE_CODE_DISAMBIGUATOR}";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.depth-distance";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;

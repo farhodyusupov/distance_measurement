@@ -23,7 +23,7 @@ class ARMeasureViewController: UIViewController, ARSCNViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
+
         sceneView = ARSCNView(frame: view.bounds)
         sceneView.delegate = self
         sceneView.scene = SCNScene()
@@ -66,7 +66,6 @@ class ARMeasureViewController: UIViewController, ARSCNViewDelegate {
                 drawLineBetweenPoints()
                 calculateDistance()
             } else {
-
                 startPoint?.removeFromParentNode()
                 endPoint?.removeFromParentNode()
                 lineNode?.removeFromParentNode()
